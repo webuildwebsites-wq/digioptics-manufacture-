@@ -2,12 +2,11 @@ import DigiProduct from "../../../models/Product/Product.model.js";
 import Inventory from "../../../models/Product/Inventory.model.js";
 import mongoose from "mongoose";
 import { uploadToGCSProduct } from "../../../Utils/uploads/uploadToGCS.js";
-// import StoreIdsModel from "../models/StoreIds.model.js";
+
 
 //  CREATE PRODUCT
 export const createProduct = async (req, res) => {
   try {
-    // const { storeId, storeNumber, _id: userId } = req.user;
 
     // Parse products from FormData
     let products = JSON.parse(req.body.products || "[]");
@@ -117,145 +116,10 @@ export const createProduct = async (req, res) => {
   }
 };
 
-//////////////////////
-// Bulk Product Upload
-//////////////////////
 
-// const getNextProductNumbers = async (storeNumber, count, suffix = "DO", session) => {
-//   const updated = await StoreIdsModel.findOneAndUpdate(
-//     { storeNumber },
-//     { $inc: { productNumber: count } },
-//     { new: true, session }
-//   );
-
-//   if (!updated) throw new Error("Store not found");
-
-//   const start = updated.productNumber - count + 1;
-
-//   return Array.from({ length: count }, (_, i) => {
-//     return `${start + i}${suffix}`;
-//   });
-// };
-
-
-// export const bulkUploadProducts = async (req, res) => {
-//   const session = await mongoose.startSession();
-
-//   try {
-//     session.startTransaction();
-
-//     const { storeId, storeNumber, _id: userId } = req.user;
-//     const suffix = req.body.suffix || "DO";
-
-//     let products = JSON.parse(req.body.products || "[]");
-
-//     if (!products.length) throw new Error("No products provided");
-
-//     // validation
-//     for (const p of products) {
-//       if (!p.productName || !p.category || p.price == null || p.mrp == null) {
-//         throw new Error("Missing required fields");
-//       }
-//     }
-
-//     // generate codes
-//     const needCodes = products.filter(p => !p.productCode);
-
-//     if (needCodes.length > 0) {
-//       const newCodes = await getNextProductNumbers(
-//         storeNumber,
-//         needCodes.length,
-//         suffix,
-//         session
-//       );
-
-//       let i = 0;
-//       products.forEach(p => {
-//         if (!p.productCode) p.productCode = newCodes[i++];
-//       });
-//     }
-
-//     const allCodes = products.map(p => p.productCode.trim());
-
-//     // duplicate check
-//     if (new Set(allCodes).size !== allCodes.length) {
-//       throw new Error("Duplicate productCode in request");
-//     }
-
-//     const existing = await Product.find({
-//       storeId,
-//       productCode: { $in: allCodes }
-//     }).session(session);
-
-//     if (existing.length > 0) {
-//       throw new Error("Some productCodes already exist");
-//     }
-
-//     // insert
-//     const docs = products.map(p => ({
-//       storeId,
-//       storeNumber,
-//       productCode: p.productCode.trim(),
-//       category: p.category.trim().toUpperCase(),
-//       productName: p.productName.trim().toUpperCase(),
-//       brand: p.brand?.trim()?.toUpperCase() || "",
-//       color: p.color?.trim() || "",
-//       size: p.size?.trim() || "",
-//       type: p.type?.trim() || "",
-//       shape: p.shape?.trim() || "",
-//       sph: p.sph?.trim() || "",
-//       cyl: p.cyl?.trim() || "",
-//       index: p.index?.trim() || "",
-//       axis: p.axis?.trim() || "",
-//       gst: Number(p.gst) || 0,
-//       hsnSac: p.hsnSac?.trim() || "",
-
-//       addition: p.addition?.trim() || "",
-//       material: p.material?.trim() || "",
-//       dimensions: p.dimensions?.trim() || "",
-
-//       coating: p.coating?.trim() || "",
-//       expiry: p.expiry || "",
-//       price: Number(p.price),
-//       mrp: Number(p.mrp),
-//       qty: Number(p.qty || 0),
-//       createdBy: userId
-//     }));
-
-//     const saved = await Product.insertMany(docs, { session });
-
-//     await session.commitTransaction();
-
-//     res.status(201).json({
-//       success: true,
-//       count: saved.length,
-//       products: saved
-//     });
-
-//   } catch (err) {
-//     await session.abortTransaction(); // 🔥 rollback EVERYTHING
-
-//     res.status(400).json({
-//       success: false,
-//       message: err.message
-//     });
-
-//   } finally {
-//     session.endSession();
-//   }
-// };
-
-
-
-// ────────────────────────────────────────────────────────────────
-//  GET /api/prodcut/suggestion?q=<productCode, productName, brand, categroy or mobile>
-//  Returns up to 5 matching vendor
-// ─────────────────────────────────────────────────────────────────
+// Suggestions
 export const suggestionProduct = async (req, res) => {
   try {
-
-    const { storeId, storeNumber } = req.user;
-
     const q = (req.query.q || "").trim();
 
     if (!q || q.length < 3) {
@@ -298,7 +162,6 @@ export const suggestionProduct = async (req, res) => {
 };
 
 
-
 //  GET ALL PRODUCTS - pagination (STORE WISE)
 export const getProducts = async (req, res) => {
   try {
@@ -336,6 +199,7 @@ export const getProducts = async (req, res) => {
   }
 };
 
+
 // get stores products data by category
 export const getProductsByCategory = async (req, res) => {
   try {
@@ -365,7 +229,6 @@ export const getProductsByCategory = async (req, res) => {
     });
   }
 };
-
 
 
 //  GET SINGLE PRODUCT
@@ -462,7 +325,6 @@ export const updateProduct = async (req, res) => {
 };
 
 
-
 //  DELETE PRODUCT
 export const deleteProduct = async (req, res) => {
   try {
@@ -490,7 +352,6 @@ export const deleteProduct = async (req, res) => {
     });
   }
 };
-
 
 
 //  ADD INVENTORY
@@ -610,6 +471,7 @@ export const addInventory = async (req, res) => {
   }
 };
 
+
 // GET INVENTORY BY PROUDCT ID
 export const getInventoryByProductId = async (req, res) => {
   try {
@@ -645,6 +507,7 @@ export const getInventoryByProductId = async (req, res) => {
     });
   }
 };
+
 
 // GET INVENTORY BY PROUDCT ID
 export const getInventoryByProductCode = async (req, res) => {
@@ -687,12 +550,6 @@ export const getInventoryByProductCode = async (req, res) => {
 export const filterProducts = async (req, res) => {
   try {
     const { startDate, endDate, keyword } = req.body;
-
-
-    /* =========================================
-       VALIDATION
-    ========================================= */
-
     if (!startDate && !keyword) {
       return res.status(400).json({
         success: false,
@@ -703,10 +560,6 @@ export const filterProducts = async (req, res) => {
     let query = {
       storeId: new mongoose.Types.ObjectId(storeId),
     };
-
-    /* =========================================
-       DATE RANGE FILTER
-    ========================================= */
 
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -719,10 +572,6 @@ export const filterProducts = async (req, res) => {
       };
     }
 
-    /* =========================================
-       KEYWORD FILTER
-    ========================================= */
-
     if (keyword) {
       const regex = new RegExp(keyword, "i");
 
@@ -734,11 +583,7 @@ export const filterProducts = async (req, res) => {
         { type: regex },
       ];
     }
-
-    /* =========================================
-       FETCH DATA
-    ========================================= */
-
+    
     const productsData = await DigiProduct.find(query).sort({ createdAt: -1 });
 
     if (!productsData.length) {

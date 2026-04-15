@@ -33,6 +33,7 @@ const allowedOrigins = [
   "http://localhost:5174",
   "http://localhost:5175",
   "http://139.59.65.108",
+  "http://139.59.65.108:3005"
 ];
 
 app.use(cors({
@@ -104,7 +105,7 @@ try {
     app.use('/api/order', orderRouter);
 
     // PRODUCTS MODULE
-    app.use('/api/product', productRouter);
+    app.use('/api/digi/product', productRouter);
     
 } catch (error) {
     console.error("Error occurred:", error);
