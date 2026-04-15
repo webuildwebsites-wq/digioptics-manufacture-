@@ -17,6 +17,7 @@ import dropdownRouter from './src/routes/Product/Dropdown.js';
 import salesPersonRouter from './src/routes/Auth/SalesPerson.js';
 import locationRouter from './src/routes/Location/location.routes.js';
 import orderRouter from './src/routes/order/order.route.js';
+import productRouter from './src/routes/Product/product.routes.js';
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ const allowedOrigins = [
   "http://localhost:5174",
   "http://localhost:5175",
   "http://139.59.65.108",
+  "http://139.59.65.108:3005"
 ];
 
 app.use(cors({
@@ -101,6 +103,9 @@ try {
 
     // CUSTOMER ORDER MODULE
     app.use('/api/order', orderRouter);
+
+    // PRODUCTS MODULE
+    app.use('/api/digi/product', productRouter);
     
 } catch (error) {
     console.error("Error occurred:", error);
