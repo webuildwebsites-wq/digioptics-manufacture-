@@ -1,6 +1,5 @@
 import DigiProduct from "../../../models/Product/Product.model.js";
 import Inventory from "../../../models/Product/Inventory.model.js";
-import mongoose from "mongoose";
 import { uploadToGCSProduct } from "../../../Utils/uploads/uploadToGCS.js";
 
 
@@ -435,19 +434,16 @@ export const addInventory = async (req, res) => {
       }
 
       inventoryDocs.push({
-        storeId,
-        storeNumber,
         productId: product._id,
         productCode,
         qty: qty,
-        expiry,
-        price: price,
-        gst,
-        total,
-        mrp,
+        expiry: expiry || null,
+        price: price || 0,
+        gst: gst || 0,
+        total: total || 0,
+        mrp: mrp || product.mrp,
         vendorId: vendorId ? vendorId : null,
-        vendorName,
-        createdBy: userId,
+        vendorName: vendorName || "",
       });
     }
 
@@ -557,9 +553,7 @@ export const filterProducts = async (req, res) => {
       });
     }
 
-    let query = {
-      storeId: new mongoose.Types.ObjectId(storeId),
-    };
+    let query = {};
 
     if (startDate && endDate) {
       const start = new Date(startDate);
