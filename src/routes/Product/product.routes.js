@@ -19,7 +19,6 @@ router.get("/inventory/productCode/:productCode", getInventoryByProductCode);
 // Get by category
 router.get("/category/:category", getProductsByCategory);
 
-
 // Create product
 router.post("/", digiupload.any(), createProduct);
 // Add inventory

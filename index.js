@@ -70,7 +70,7 @@ app.set('trust proxy', 1);
 try {
     app.get("/", (req, res) => {
         res.json({
-            message: "digioptics-manufactures Server is running on port " + (process.env.PORT || 8080),
+            message: "DigiOptics Manufacture Server is running on port " + (process.env.PORT || 8080),
             error: false,
             success: true,
         })

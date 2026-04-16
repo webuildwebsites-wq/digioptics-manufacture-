@@ -564,22 +564,6 @@ export async function updateDraftOrderService(orderId, data) {
   return order;
 }
 
-export async function resolveProductService({ brand, category, productName, productMode, powerType, powers }) {
-  if (!brand || !category || !productName) {
-    throw { statusCode: 400, code: "MISSING_FIELDS", message: "brand, category, and productName are required" };
-  }
-  const brandName       = typeof brand       === "object" ? brand.name       : brand;
-  const categoryName    = typeof category    === "object" ? category.name    : category;
-  const productNameStr  = typeof productName === "object" ? productName.name : productName;
-  return resolveAllEyes({
-    brand: brandName,
-    category: categoryName,
-    productName: productNameStr,
-    productMode,
-    powerType: powerType || "Single",
-    powers: powers || [],
-  });
-}
 
 export async function getTintOptionsService() {
   return await Tint.find({}).sort({ name: 1 }).lean();

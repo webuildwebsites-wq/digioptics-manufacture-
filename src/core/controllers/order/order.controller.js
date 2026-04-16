@@ -1,6 +1,6 @@
 import {
   createOrderService, getOrderService, listOrdersService,
-  cancelOrderService, resolveProductService,
+  cancelOrderService,
   getProductNamesService, getTintOptionsService, updateDraftOrderService,
   getFrameTypesService, deleteOrderService,
   getProductBrandsService, getProductCategoriesService, getProductTreatmentsService,
@@ -75,14 +75,6 @@ export const deleteOrder = async (req, res) => {
   }
 };
 
-export const resolveProduct = async (req, res) => {
-  try {
-    const resolved = await resolveProductService(req.body);
-    return sendSuccessResponse(res, 200, { resolved });
-  } catch (err) {
-    return handleError(res, err);
-  }
-};
 
 export const getProductNames = async (req, res) => {
   try {
