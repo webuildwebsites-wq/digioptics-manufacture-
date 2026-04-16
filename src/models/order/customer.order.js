@@ -36,27 +36,10 @@ const lensDataSchema = new mongoose.Schema({
   bvd: Number,
 }, { _id: false });
 
-// Per-eye resolved grid data
-const resolvedEyeSchema = new mongoose.Schema({
-  side:      { type: String, enum: ["R", "L"] },
-  itemCode:  String,
-  blankCode: String,
-  supplier:  String,
-  baseCurve: Number,
-  diameter:  Number,
-}, { _id: false });
-
-const supplierEntrySchema = new mongoose.Schema({
-  name:     { type: String },
-  priority: { type: Number },
-  active:   { type: Boolean },
-}, { _id: false });
 
 const orderSchema = new mongoose.Schema({
-  // Auto-generated order number
   orderNumber: { type: String, unique: true, sparse: true },
 
-  // Customer Details
   customer: {
     customerId: { type: mongoose.Schema.Types.ObjectId, ref: "Customer", required: true },
     customerName: { type: String },
@@ -64,15 +47,10 @@ const orderSchema = new mongoose.Schema({
     customerShipToBranchName: { type: String },
   },
 
-  lab: {
-    id: { type: mongoose.Schema.Types.ObjectId, ref: "ProductLab" },
-    name: String,
-  },
   orderReference: String,
   consumerCardName: String,
   opticianName: String,
 
-  // Product Details
   powerType: { type: String, enum: ["Single", "Both"] },
   productMode: { type: String, enum: ["Stock Lens", "Rx"] },
   hasPrism: Boolean,
@@ -109,18 +87,9 @@ const orderSchema = new mongoose.Schema({
   remarks: String,
   mirror: Boolean,
 
-  resolved: [resolvedEyeSchema],
-
-  suppliers:        [supplierEntrySchema],
-
-  // Centration
   centration: [centrationSchema],
-
-  // Advanced
   fitting: fittingSchema,
   lensData: lensDataSchema,
-
-  // Charges
   directCustomer: String,
   shippingCharges: Number,
   otherCharges: Number,

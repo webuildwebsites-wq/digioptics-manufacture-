@@ -2,9 +2,7 @@ import express from "express";
 import { createProduct, getProducts, getProductById, updateProduct, deleteProduct, addInventory, getInventoryByProductId, getProductsByCategory, filterProducts, suggestionProduct, getInventoryByProductCode } from "../../core/controllers/Product/Product.controller.js";
 import { digiupload } from "../uploads/multer.js";
 
-
 const router = express.Router();
-
 
 // Get all products (pagination)
 router.get("/", getProducts);
@@ -18,6 +16,7 @@ router.get("/inventory/:productId", getInventoryByProductId);
 router.get("/inventory/productCode/:productCode", getInventoryByProductCode);
 // Get by category
 router.get("/category/:category", getProductsByCategory);
+
 
 // Create product
 router.post("/", digiupload.any(), createProduct);

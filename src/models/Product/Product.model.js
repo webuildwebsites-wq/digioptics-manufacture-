@@ -2,18 +2,6 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
-    // storeId: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "Store",
-    //   required: true,
-    //   index: true,
-    // },
-
-    // storeNumber: {
-    //   type: String,
-    //   required: true,
-    // },
-
     productCode: {
       type: String,
       required: true,
@@ -136,10 +124,10 @@ const productSchema = new mongoose.Schema(
       min: 0,
     },
 
-    // createdBy: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "User",
-    // },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "employee",
+    },
   },
   { timestamps: true }
 );

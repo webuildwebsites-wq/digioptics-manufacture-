@@ -4,7 +4,7 @@ import {
   getProductNamesService, getTintOptionsService, updateDraftOrderService,
   getFrameTypesService, deleteOrderService,
   getProductBrandsService, getProductCategoriesService, getProductTreatmentsService,
-  getProductIndexesService, getProductTypesService, getProductLabsService,
+  getProductIndexesService, getProductTypesService,
   getProductCoatingsService,
 } from "../../services/order/order.service.js";
 import { sendSuccessResponse, sendErrorResponse } from "../../../Utils/response/responseHandler.js";
@@ -142,13 +142,6 @@ export const getProductTypes = async (req, res) => {
   try {
     const data = await getProductTypesService();
     return sendSuccessResponse(res, 200, data, "Product types retrieved successfully");
-  } catch (err) { return handleError(res, err); }
-};
-
-export const getProductLabs = async (req, res) => {
-  try {
-    const data = await getProductLabsService();
-    return sendSuccessResponse(res, 200, data, "Product labs retrieved successfully");
   } catch (err) { return handleError(res, err); }
 };
 

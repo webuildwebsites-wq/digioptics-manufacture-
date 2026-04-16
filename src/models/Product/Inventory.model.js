@@ -1,20 +1,7 @@
-// const mongoose = require("mongoose");
 import mongoose from "mongoose";
 
 const inventorySchema = new mongoose.Schema(
   {
-    // storeId: {
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: "Store",
-    //   required: true,
-    //   index: true,
-    // },
-
-    // storeNumber: {
-    //   type: String,
-    //   required: true,
-    // },
-
     productId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Product",
@@ -26,11 +13,11 @@ const inventorySchema = new mongoose.Schema(
       required: true,
       trim: true
     },
-    
+
     qty: {
-        type: Number,
-        required: true,
-        min: 1,
+      type: Number,
+      required: true,
+      min: 1,
     },
 
     expiry: {
@@ -80,6 +67,5 @@ const inventorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// module.exports = mongoose.model("Inventory", inventorySchema);
 const Inventory = mongoose.model("Inventory", inventorySchema);
 export default Inventory;

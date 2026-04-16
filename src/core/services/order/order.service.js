@@ -1,6 +1,4 @@
 import Order from "../../../models/order/customer.order.js";
-import BaseGrid from "../../../models/Product/BaseGrid.js";
-import Product from "../../../models/Product/Product.js";
 import Customer from "../../../models/Auth/Customer.js";
 import Tint from "../../../models/order/Tint.js";
 import FrameType from "../../../models/order/FrameType.js";
@@ -9,108 +7,8 @@ import ProductCategory from "../../../models/order/ProductCategory.js";
 import ProductTreatment from "../../../models/order/ProductTreatment.js";
 import ProductIndex from "../../../models/order/ProductIndex.js";
 import ProductType from "../../../models/order/ProductType.js";
-import ProductLab from "../../../models/order/ProductLab.js";
 import ProductCoating from "../../../models/order/ProductCoating.js";
-
-function roundToStep(value, step = 0.25) {
-  if (value == null || isNaN(Number(value))) return null;
-  return Math.round(Number(value) / step) * step;
-}
-
-function findGridCell(grid, sph, axisValue) {
-  const sphR = roundToStep(sph);
-  const axR = roundToStep(axisValue);
-
-  if (sphR == null) return null;
-
-  if (axR != null) {
-    return grid.find((g) => g.sphere === sphR && g.axisValue === axR) ?? null;
-  }
-
-  return grid.find((g) => g.sphere === sphR && g.axisValue === 0) ?? null;
-}
-
-function caseInsensitive(val) {
-  const normalized = (val || "").replace(/\s+/g, " ").trim();
-  const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s+");
-  return { $regex: `^${escaped}$`, $options: "i" };
-}
-
-export async function resolveEye({ brand, category, productName, sph, cyl, add, productMode }) {
-  console.log("caseInsensitive(brand) : ", caseInsensitive(brand));
-  console.log("category : ", caseInsensitive(category));
-  console.log("productName : ", productName);
-  console.log("productName : ", caseInsensitive(productName))
-  const product = await Product.findOne({
-    brand: caseInsensitive(brand),
-    category: caseInsensitive(category),
-    productName: caseInsensitive(productName),
-  }).lean();
-
-  if (!product) {
-    return { error: `Product not found for brand="${brand}", category="${category}", productName="${productName}"` };
-  }
-
-  const blankCode = (product.blankCode || "").trim().toUpperCase();
-  if (!blankCode) {
-    return { error: `No blank code defined for product "${productName}"` };
-  }
-
-  const activeSuppliers = (product.suppliers || []).filter((s) => s.active).sort((a, b) => a.priority - b.priority);
-
-  if (!activeSuppliers.length) {
-    return { error: `No active supplier found for product "${productName}"` };
-  }
-
-  const gridType = productMode === "Stock Lens" ? "FFGrid" : "RxGrid";
-  
-  let allGridDocs = await BaseGrid.find({
-    productCode: caseInsensitive(blankCode),
-    gridType,
-  }).lean();
-
-  console.log("gridType : ",gridType);
-  console.log("blankCode : ", caseInsensitive(blankCode));
-
-  console.log("allGridDocs : ", allGridDocs.length);
-
-
-  if (!allGridDocs.length) {
-    allGridDocs = await BaseGrid.find({
-      productCode: caseInsensitive(blankCode),
-    }).lean();
-    console.log("Fall back all grids : ", allGridDocs);
-  }
-
-  if (!allGridDocs.length) {
-    return { error: `No grid data found for blank code "${blankCode}"` };
-  }
-
-  const gridDoc = allGridDocs[0];
-  const chosenSupplier = (product.suppliers || []).filter((s) => s.active).sort((a, b) => a.priority - b.priority)[0];
-
-
-  if (gridDoc.axisType.toUpperCase() !== "Minus cylinder".toLocaleUpperCase() && (add == null)) {
-    return { error: `This is a Stock Lens product. Please provide "add" value in powers (e.g. "add": 0.25)` };
-  }
-
-  const axisValue = gridDoc.axisType === "Minus cylinder" ? (cyl ?? 0) : add;
-  const cell = findGridCell(gridDoc.grid, sph, axisValue);
-
-  return {
-    itemCode: product.itemCode,
-    blankCode,
-    supplier: chosenSupplier.name,
-    productCode: blankCode,
-    gridType: gridDoc.gridType,
-    baseCurve: cell?.stock ?? null,
-    allSuppliers: activeSuppliers.map((s) => ({
-      name: s.name,
-      priority: s.priority,
-      active: s.active,
-    })),
-  };
-}
+import DigiProduct from "../../../models/Product/Product.model.js";
 
 export async function generateOrderNumber() {
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -147,45 +45,6 @@ async function resolveDropdownField(Model, value, fieldLabel, nameField = "name"
   return null;
 }
 
-export async function resolveAllEyes({ brand, category, productName, productMode, powerType, powers = [] }) {
-  const requestedSides = powers.map((p) => p.side).filter(Boolean);
-  const sides = requestedSides.length > 0 ? requestedSides : (powerType === "Both" ? ["R", "L"] : ["R"]);
-  const resolved = [];
-  let suppliers = [];
-
-  for (const side of sides) {
-    const eye = powers.find((p) => p.side === side) || {};
-    const result = await resolveEye({
-      brand,
-      category,
-      productName,
-      sph: eye.sph,
-      cyl: eye.cyl,
-      add: eye.add,
-      productMode: productMode || "Rx",
-    });
-
-    if (result.error) {
-      throw { statusCode: 422, code: "RESOLUTION_ERROR", message: side + " eye: " + result.error };
-    }
-
-    if (suppliers.length === 0 && result.allSuppliers?.length) {
-      suppliers = result.allSuppliers;
-    }
-
-    resolved.push({
-      side,
-      itemCode: result.itemCode,
-      blankCode: result.blankCode,
-      supplier: result.supplier,
-      baseCurve: result.baseCurve,
-      diameter: eye.diameter ?? null,
-    });
-  }
-
-  return { resolved, suppliers};
-}
-
 
 function sanitizeFitting(fitting) {
   if (!fitting) return fitting;
@@ -193,8 +52,8 @@ function sanitizeFitting(fitting) {
     return { hasFlatFitting: false };
   }
   const missing = [];
-  if (fitting.dbl == null)         missing.push("fitting.dbl (DBL)");
-  if (!fitting.frameType)          missing.push("fitting.frameType (Frame Type)");
+  if (fitting.dbl == null) missing.push("fitting.dbl (DBL)");
+  if (!fitting.frameType) missing.push("fitting.frameType (Frame Type)");
   if (fitting.frameLength == null) missing.push("fitting.frameLength (Frame Length)");
   if (fitting.frameHeight == null) missing.push("fitting.frameHeight (Frame Height)");
   if (missing.length) {
@@ -204,24 +63,23 @@ function sanitizeFitting(fitting) {
 }
 
 
-export async function  createOrderService(data, userId) {
+export async function createOrderService(data, userId) {
   const isDraft = data.status === "Draft";
   const { productMode, powerType, powers = [] } = data;
 
   data.fitting = sanitizeFitting(data.fitting);
 
-  const [labResolved, brandResolved, categoryResolved, productNameResolved, coatingResolved, treatmentResolved, tintResolved] = await Promise.all([
-    data.lab       ? resolveDropdownField(ProductLab,       data.lab,       "Lab")         : null,
-    data.brand     ? resolveDropdownField(ProductBrand,     data.brand,     "Brand")       : null,
-    data.category  ? resolveDropdownField(ProductCategory,  data.category,  "Category")    : null,
-    data.productName ? resolveDropdownField(Product, data.productName, "Product", "productName") : null,
-    data.coating   ? resolveDropdownField(ProductCoating,   data.coating,   "Coating")     : null,
-    data.treatment ? resolveDropdownField(ProductTreatment, data.treatment, "Treatment")   : null,
-    data.tint      ? resolveDropdownField(Tint,             data.tint,      "Tint")        : null,
+  const [brandResolved, categoryResolved, productNameResolved, coatingResolved, treatmentResolved, tintResolved] = await Promise.all([
+    data.brand ? resolveDropdownField(ProductBrand, data.brand, "Brand") : null,
+    data.category ? resolveDropdownField(ProductCategory, data.category, "Category") : null,
+    data.productName ? resolveDropdownField(DigiProduct, data.productName, "DigiProduct", "productName") : null,
+    data.coating ? resolveDropdownField(ProductCoating, data.coating, "Coating") : null,
+    data.treatment ? resolveDropdownField(ProductTreatment, data.treatment, "Treatment") : null,
+    data.tint ? resolveDropdownField(Tint, data.tint, "Tint") : null,
   ]);
 
-  const brand       = brandResolved?.name;
-  const category    = categoryResolved?.name;
+  const brand = brandResolved?.name;
+  const category = categoryResolved?.name;
   const productName = productNameResolved?.name;
 
   const missing = [];
@@ -233,16 +91,16 @@ export async function  createOrderService(data, userId) {
 
   if (!isDraft) {
     const submitMissing = [];
-    if (!brand)                submitMissing.push("brand");
-    if (!category)             submitMissing.push("category");
-    if (!productName)          submitMissing.push("productName");
-    if (!productMode)          submitMissing.push("productMode");
-    if (!powerType)            submitMissing.push("powerType");
-    if (!powers.length)        submitMissing.push("powers (at least one eye required)");
-    if (!coatingResolved)      submitMissing.push("coating");
-    if (data.index == null)    submitMissing.push("index");
-    if (!tintResolved)         submitMissing.push("tint");
-    if (!treatmentResolved)    submitMissing.push("treatment");
+    if (!brand) submitMissing.push("brand");
+    if (!category) submitMissing.push("category");
+    if (!productName) submitMissing.push("productName");
+    if (!productMode) submitMissing.push("productMode");
+    if (!powerType) submitMissing.push("powerType");
+    if (!powers.length) submitMissing.push("powers (at least one eye required)");
+    if (!coatingResolved) submitMissing.push("coating");
+    if (data.index == null) submitMissing.push("index");
+    if (!tintResolved) submitMissing.push("tint");
+    if (!treatmentResolved) submitMissing.push("treatment");
 
     if (submitMissing.length) {
       throw { statusCode: 400, code: "MISSING_FIELDS", message: `Missing required fields for submission: ${submitMissing.join(", ")}` };
@@ -289,10 +147,6 @@ export async function  createOrderService(data, userId) {
     customerShipToBranchName = shipTo.branchName;
   }
 
-  const { resolved, suppliers } = !isDraft
-    ? await resolveAllEyes({ brand, category, productName, productMode, powerType, powers })
-    : { resolved: [], suppliers: [] };
-
   const orderNumber = await generateOrderNumber();
 
   const order = await Order.create({
@@ -303,7 +157,6 @@ export async function  createOrderService(data, userId) {
       customerShipToId: data.customer.customerShipToId ?? null,
       customerShipToBranchName: customerShipToBranchName,
     },
-    lab: labResolved,
     orderReference: data.orderReference,
     consumerCardName: data.consumerCardName,
     opticianName: data.opticianName,
@@ -322,8 +175,6 @@ export async function  createOrderService(data, userId) {
     tintDetails: data.tintDetails,
     remarks: data.remarks,
     mirror: data.mirror ?? false,
-    resolved,
-    suppliers,
     centration: data.centration ?? [],
     fitting: data.fitting,
     lensData: data.lensData,
@@ -338,6 +189,7 @@ export async function  createOrderService(data, userId) {
   return order;
 }
 
+
 export async function getOrderService(orderId) {
   const order = await Order.findById(orderId)
     .populate("customer.customerId", "shopName ownerName customerCode mobileNo1 businessEmail customerBalance creditLimit creditUsed zone")
@@ -347,6 +199,7 @@ export async function getOrderService(orderId) {
   if (!order) throw { statusCode: 404, code: "NOT_FOUND", message: "Order not found" };
   return order;
 }
+
 
 export async function deleteOrderService(orderId) {
   const order = await Order.findById(orderId);
@@ -359,7 +212,8 @@ export async function deleteOrderService(orderId) {
   await Order.findByIdAndDelete(orderId);
 }
 
-export async function listOrdersService({ customerId, status="Submitted", page = 1, limit = 20, search, fromDate, toDate }) {
+
+export async function listOrdersService({ customerId, status = "Submitted", page = 1, limit = 20, search, fromDate, toDate }) {
   const VALID_STATUSES = ["Draft", "Submitted", "Processing", "Completed", "Cancelled"];
   const filter = {};
 
@@ -439,40 +293,38 @@ export async function updateDraftOrderService(orderId, data) {
 
   if (data.fitting !== undefined) data.fitting = sanitizeFitting(data.fitting);
 
-  // Resolve any dropdown fields provided
-  if (data.lab)         data.lab         = await resolveDropdownField(ProductLab,       data.lab,         "Lab");
-  if (data.brand)       data.brand       = await resolveDropdownField(ProductBrand,     data.brand,       "Brand");
-  if (data.category)    data.category    = await resolveDropdownField(ProductCategory,  data.category,    "Category");
-  if (data.productName) data.productName = await resolveDropdownField(Product,          data.productName, "Product", "productName");
-  if (data.coating)     data.coating     = await resolveDropdownField(ProductCoating,   data.coating,     "Coating");
-  if (data.treatment)   data.treatment   = await resolveDropdownField(ProductTreatment, data.treatment,   "Treatment");
-  if (data.tint)        data.tint        = await resolveDropdownField(Tint,             data.tint,        "Tint");
+  if (data.brand) data.brand = await resolveDropdownField(ProductBrand, data.brand, "Brand");
+  if (data.category) data.category = await resolveDropdownField(ProductCategory, data.category, "Category");
+  if (data.productName) data.productName = await resolveDropdownField(DigiProduct, data.productName, "DigiProduct", "productName");
+  if (data.coating) data.coating = await resolveDropdownField(ProductCoating, data.coating, "Coating");
+  if (data.treatment) data.treatment = await resolveDropdownField(ProductTreatment, data.treatment, "Treatment");
+  if (data.tint) data.tint = await resolveDropdownField(Tint, data.tint, "Tint");
 
-  const brand       = (data.brand       || order.brand)?.name;
-  const category    = (data.category    || order.category)?.name;
+  const brand = (data.brand || order.brand)?.name;
+  const category = (data.category || order.category)?.name;
   const productName = (data.productName || order.productName)?.name;
-  const productMode = data.productMode  || order.productMode;
-  const powerType   = data.powerType    || order.powerType;
-  const powers      = data.powers       || order.powers;
+  const productMode = data.productMode || order.productMode;
+  const powerType = data.powerType || order.powerType;
+  const powers = data.powers || order.powers;
 
   if (data.status === "Submitted") {
     const submitMissing = [];
-    if (!brand)       submitMissing.push("brand");
-    if (!category)    submitMissing.push("category");
+    if (!brand) submitMissing.push("brand");
+    if (!category) submitMissing.push("category");
     if (!productName) submitMissing.push("productName");
     if (!productMode) submitMissing.push("productMode");
-    if (!powerType)   submitMissing.push("powerType");
+    if (!powerType) submitMissing.push("powerType");
     if (!powers?.length) submitMissing.push("powers (at least one eye required)");
 
-    const coating   = (data.coating   || order.coating)?.name;
+    const coating = (data.coating || order.coating)?.name;
     const treatment = (data.treatment || order.treatment)?.name;
-    const tint      = (data.tint      || order.tint)?.name;
-    const index     = data.index ?? order.index;
+    const tint = (data.tint || order.tint)?.name;
+    const index = data.index ?? order.index;
 
-    if (!coating)       submitMissing.push("coating");
-    if (index == null)  submitMissing.push("index");
-    if (!tint)          submitMissing.push("tint");
-    if (!treatment)     submitMissing.push("treatment");
+    if (!coating) submitMissing.push("coating");
+    if (index == null) submitMissing.push("index");
+    if (!tint) submitMissing.push("tint");
+    if (!treatment) submitMissing.push("treatment");
 
     if (submitMissing.length) {
       throw { statusCode: 400, code: "MISSING_FIELDS", message: `Missing required fields for submission: ${submitMissing.join(", ")}` };
@@ -503,15 +355,6 @@ export async function updateDraftOrderService(orderId, data) {
     }
 
     data.submittedAt = new Date();
-  }
-
-  const needsResolve = data.brand || data.category || data.productName || data.powers || data.productMode || data.powerType;
-  if (needsResolve) {
-    if (brand && category && productName && productMode && powerType && powers?.length) {
-      const { resolved, suppliers } = await resolveAllEyes({ brand, category, productName, productMode, powerType, powers });
-      data.resolved = resolved;
-      data.suppliers = suppliers;
-    }
   }
 
   if (data.customer) {
@@ -580,7 +423,7 @@ export async function getProductBrandsService() {
 
 export async function getProductCategoriesService({ brand } = {}) {
   if (brand?.trim()) {
-    const categoryNames = await Product.distinct("category", {
+    const categoryNames = await DigiProduct.distinct("category", {
       brand: { $regex: `^${brand.trim()}$`, $options: "i" },
       category: { $ne: null }
     });
@@ -592,28 +435,24 @@ export async function getProductCategoriesService({ brand } = {}) {
 export async function getProductNamesService({ brand, category, search = "", limit = 100, page = 1 }) {
   const filter = { productName: { $ne: null } };
 
-  if (brand?.trim())    filter.brand    = { $regex: `^${brand.trim()}$`,    $options: "i" };
+  if (brand?.trim()) filter.brand = { $regex: `^${brand.trim()}$`, $options: "i" };
   if (category?.trim()) filter.category = { $regex: `^${category.trim()}$`, $options: "i" };
-  if (search.trim())    filter.productName = { $regex: search.trim(), $options: "i" };
+  if (search.trim()) filter.productName = { $regex: search.trim(), $options: "i" };
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  const total = await Product.countDocuments(filter);
+  const total = await DigiProduct.countDocuments(filter);
 
-  const results = await Product.find(filter, {
+  const results = await DigiProduct.find(filter, {
     _id: 1, itemCode: 1, productName: 1, brand: 1, productType: 1, hsnCode: 1,
     category: 1, treatment: 1, price: 1, status: 1, createdBy: 1, createdAt: 1, updatedAt: 1, __v: 1,
-  })
-    .sort({ productName: 1 })
-    .skip(skip)
-    .limit(parseInt(limit))
-    .lean();
+  }).sort({ productName: 1 }).skip(skip).limit(parseInt(limit)).lean();
 
   return {
     data: results,
     pagination: {
       total,
-      page:       parseInt(page),
-      limit:      parseInt(limit),
+      page: parseInt(page),
+      limit: parseInt(limit),
       totalPages: Math.ceil(total / parseInt(limit)),
     },
   };
@@ -631,9 +470,6 @@ export async function getProductTypesService() {
   return await ProductType.find({}).sort({ name: 1 }).lean();
 }
 
-export async function getProductLabsService() {
-  return await ProductLab.find({}).sort({ name: 1 }).lean();
-}
 
 export async function getProductCoatingsService() {
   return await ProductCoating.find({}).sort({ name: 1 }).lean();
