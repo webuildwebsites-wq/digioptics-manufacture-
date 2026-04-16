@@ -6,7 +6,6 @@ import {
   updateDraftOrder,
   cancelOrder,
   deleteOrder,
-  resolveProduct,
   getProductNames,
   getTintOptions,
   getFrameTypes,
@@ -24,19 +23,19 @@ const orderRouter = express.Router();
 
 orderRouter.use(ProtectUser);
 
-orderRouter.post("/resolve-product",          resolveProduct);
-
 // Product field dropdowns — all before /:id to avoid route conflicts
 orderRouter.get("/product/get-tint",          getTintOptions);
 orderRouter.get("/product/get-frame-types",   getFrameTypes);
-orderRouter.get("/product-fields/brand",      getProductBrands);
-orderRouter.get("/product-fields/category",   getProductCategories);
+
+// orderRouter.get("/product-fields/brand",      getProductBrands);
+// orderRouter.get("/product-fields/category",   getProductCategories);
+
 orderRouter.get("/product-fields/treatment",  getProductTreatments);
-orderRouter.get("/product-fields/index",      getProductIndexes);
+// orderRouter.get("/product-fields/index",      getProductIndexes);
 orderRouter.get("/product-fields/productType",getProductTypes);
 orderRouter.get("/product-fields/lab",        getProductLabs);
-orderRouter.get("/product-fields/coating",    getProductCoatings);
-orderRouter.get("/product-names",             getProductNames);
+// orderRouter.get("/product-fields/coating",    getProductCoatings);
+// orderRouter.get("/product-names",             getProductNames);
 
 orderRouter.post("/create",                   createOrder);
 orderRouter.get("/get-all-orders",            listOrders);
