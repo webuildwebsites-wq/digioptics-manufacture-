@@ -78,8 +78,15 @@ export const deleteOrder = async (req, res) => {
 
 export const getProductNames = async (req, res) => {
   try {
-    const result = await getProductNamesService(req.query);
-    return sendSuccessResponse(res, 200, result, "Products retrieved successfully");
+    const { data, pagination } = await getProductNamesService(req.query);
+    return res.status(200).json({
+      success: true,
+      message: "Products retrieved successfully",
+      data : {
+        data : data
+      },
+      pagination,
+    });
   } catch (err) {
     return handleError(res, err);
   }
@@ -147,7 +154,7 @@ export const getProductTypes = async (req, res) => {
 
 export const getProductCoatings = async (req, res) => {
   try {
-    const data = await getProductCoatingsService();
+    const data = await getProductCoatingsService(req.query);
     return sendSuccessResponse(res, 200, data, "Product coatings retrieved successfully");
   } catch (err) { return handleError(res, err); }
 };

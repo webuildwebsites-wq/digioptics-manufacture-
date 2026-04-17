@@ -6,16 +6,16 @@ const router = express.Router();
 
 // Get all products (pagination)
 router.get("/", getProducts);
-// Get single product
-router.get("/:id", getProductById);
-// Suggestions
+// Suggestions — must be before /:id to avoid route conflict
 router.get("/suggestion", suggestionProduct);
+// Inventory by product code — must be before /inventory/:productId
+router.get("/inventory/productCode/:productCode", getInventoryByProductCode);
 // Inventory by product ID
 router.get("/inventory/:productId", getInventoryByProductId);
-// Inventory by product code
-router.get("/inventory/productCode/:productCode", getInventoryByProductCode);
 // Get by category
 router.get("/category/:category", getProductsByCategory);
+// Get single product — keep last among GET /:param routes
+router.get("/:id", getProductById);
 
 
 // Create product

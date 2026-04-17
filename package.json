@@ -16,8 +16,7 @@
     "seed-roles-departments": "node scripts/seedRolesAndDepartments.js",
     "update-employee-type-order": "node scripts/updateEmployeeTypeOrder.js",
     "seed-excel": "node scripts/seedExcelData.js",
-    "seed-grids": "node scripts/seedBaseGrids.js",
-    "seed-all": "node scripts/seedExcelData.js && node scripts/seedBaseGrids.js",
+    "seed-digi-products": "node scripts/seedDigiProducts.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
