@@ -45,6 +45,25 @@ async function resolveDiigProductField(fieldKey, value, fieldLabel) {
   return null;
 }
 
+async function resolveProductNameField(value) {
+  if (!value) return null;
+
+  let doc;
+  if (typeof value === "object" && value.id) {
+    doc = await DigiProduct.findById(value.id).lean();
+    if (!doc) throw { statusCode: 404, code: "NOT_FOUND", message: `Product with id "${value.id}" not found in products` };
+  } else if (typeof value === "string") {
+    doc = await DigiProduct.findOne({
+      productName: { $regex: `^${value.trim()}$`, $options: "i" },
+    }).lean();
+    if (!doc) throw { statusCode: 404, code: "NOT_FOUND", message: `Product "${value}" not found in products` };
+  } else {
+    return null;
+  }
+
+  return { id: doc._id, name: doc.productName, price: doc.price ?? 0 };
+}
+
 async function resolveDropdownField(Model, value, fieldLabel, nameField = "name") {
   if (!value) return null;
 
@@ -93,7 +112,7 @@ export async function createOrderService(data, userId) {
     data.brand       ? resolveDiigProductField("brand",    data.brand,     "Brand")     : null,
     data.category    ? resolveDiigProductField("category", data.category,  "Category")  : null,
     data.coating     ? resolveDiigProductField("coating",  data.coating,   "Coating")   : null,
-    data.productName ? resolveDropdownField(DigiProduct,   data.productName, "Product", "productName") : null,
+    data.productName ? resolveProductNameField(data.productName) : null,
     data.treatment   ? resolveDropdownField(ProductTreatment, data.treatment, "Treatment") : null,
     data.tint        ? resolveDropdownField(Tint,             data.tint,      "Tint")      : null,
   ]);
@@ -189,8 +208,10 @@ export async function createOrderService(data, userId) {
     fitting:          data.fitting,
     lensData:         data.lensData,
     directCustomer:   data.directCustomer,
+    price:            productNameResolved?.price ?? 0,
     shippingCharges:  data.shippingCharges ?? 0,
     otherCharges:     data.otherCharges ?? 0,
+    totalOrderPrice:  (productNameResolved?.price ?? 0) + (data.shippingCharges ?? 0) + (data.otherCharges ?? 0),
     status:           isDraft ? "Draft" : "Submitted",
     submittedAt:      isDraft ? null : new Date(),
     createdBy:        userId,
@@ -295,7 +316,7 @@ export async function updateDraftOrderService(orderId, data) {
   if (data.brand)       data.brand       = await resolveDiigProductField("brand",    data.brand,     "Brand");
   if (data.category)    data.category    = await resolveDiigProductField("category", data.category,  "Category");
   if (data.coating)     data.coating     = await resolveDiigProductField("coating",  data.coating,   "Coating");
-  if (data.productName) data.productName = await resolveDropdownField(DigiProduct,   data.productName, "Product", "productName");
+  if (data.productName) data.productName = await resolveProductNameField(data.productName);
   if (data.treatment)   data.treatment   = await resolveDropdownField(ProductTreatment, data.treatment, "Treatment");
   if (data.tint)        data.tint        = await resolveDropdownField(Tint,             data.tint,      "Tint");
 
@@ -394,6 +415,11 @@ export async function updateDraftOrderService(orderId, data) {
     "directCustomer", "shippingCharges", "otherCharges", "status",
   ];
   UPDATABLE.forEach((key) => { if (data[key] !== undefined) order[key] = data[key]; });
+
+  // price is always derived from the resolved productName, never from frontend
+  const resolvedPrice = (data.productName || order.productName)?.price ?? 0;
+  order.price = resolvedPrice;
+  order.totalOrderPrice = resolvedPrice + (order.shippingCharges ?? 0) + (order.otherCharges ?? 0);
 
   await order.save();
   return order;

@@ -91,8 +91,10 @@ const orderSchema = new mongoose.Schema({
   fitting: fittingSchema,
   lensData: lensDataSchema,
   directCustomer: String,
-  shippingCharges: Number,
-  otherCharges: Number,
+  price: { type: Number, default: 0 },
+  shippingCharges: { type: Number, default: 0 },
+  otherCharges: { type: Number, default: 0 },
+  totalOrderPrice: { type: Number, default: 0 },
 
   status: {
     type: String,
