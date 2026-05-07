@@ -37,7 +37,8 @@ const allowedOrigins = [
   "http://localhost:5174",
   "http://localhost:5175",
   "http://139.59.65.108",
-  "http://139.59.65.108:3005"
+  "http://139.59.65.108:3005",
+  "https://digioptics-wholesale.netlify.app"
 ];
 
 app.use(cors({
