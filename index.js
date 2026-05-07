@@ -19,6 +19,10 @@ import locationRouter from './src/routes/Location/location.routes.js';
 import orderRouter from './src/routes/order/order.route.js';
 import productRouter from './src/routes/Product/product.routes.js';
 
+import repairRouter from './src/routes/repair.routes.js';
+import vendorRouter from './src/routes/vendor.routes.js';
+import vendorOrderRouter from './src/routes/vendorOrder.routes.js';
+
 dotenv.config();
 
 const app = express();
@@ -60,77 +64,88 @@ app.use(helmet({
   },
 }));
 
-app.use(compression()); 
+app.use(compression());
 app.use(morgan('combined'));
-app.use(hpp()); 
-app.use(express.json({ limit: '10mb' })); 
+app.use(hpp());
+app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser())
 app.set('trust proxy', 1);
 
 try {
-    app.get("/", (req, res) => {
-        res.json({
-            message: "DigiOptics Manufacture Server is running on port " + (process.env.PORT || 8080),
-            error: false,
-            success: true,
-        })
+  app.get("/", (req, res) => {
+    res.json({
+      message: "DigiOptics Manufacture Server is running on port " + (process.env.PORT || 8080),
+      error: false,
+      success: true,
     })
+  })
 
-    // EMPLOYEE ROUTES (Admin/Staff)
-    app.use('/api/employee/auth', employeeRouter);
-    app.use('/api/employee/management', employeeManagementRouter);
-    
-    // SALES PERSON ROUTES
-    app.use('/api/employee/sales-persons', salesPersonRouter);
-    
-    // SYSTEM CONFIGURATION ROUTES (SuperAdmin/Admin only)
-    app.use('/api/system/config', systemConfigRouter);
+  // EMPLOYEE ROUTES (Admin/Staff)
+  app.use('/api/employee/auth', employeeRouter);
+  app.use('/api/employee/management', employeeManagementRouter);
 
-    // DEPARTMENT & SUB-ROLE ROUTES
-    app.use('/api/departments', departmentRouter);
+  // SALES PERSON ROUTES
+  app.use('/api/employee/sales-persons', salesPersonRouter);
 
-   // CUSTOMER ROUTES
-    app.use('/api/customer/management', customerRouter);
+  // SYSTEM CONFIGURATION ROUTES (SuperAdmin/Admin only)
+  app.use('/api/system/config', systemConfigRouter);
 
-   // UPLOAD IMAGE ROUTES
-    app.use('/api/bucket/upload-image', imageUploadRouter)
+  // DEPARTMENT & SUB-ROLE ROUTES
+  app.use('/api/departments', departmentRouter);
 
-    // PRODUCT ROUTES (All dropdowns including brands, categories, business-types)
-    app.use('/api/product', dropdownRouter);
+  // CUSTOMER ROUTES
+  app.use('/api/customer/management', customerRouter);
 
-    // LOCATION ROUTES (New unified structure)
-    app.use('/api/location', locationRouter);
+  // UPLOAD IMAGE ROUTES
+  app.use('/api/bucket/upload-image', imageUploadRouter)
 
-    // CUSTOMER ORDER MODULE
-    app.use('/api/order', orderRouter);
+  // PRODUCT ROUTES (All dropdowns including brands, categories, business-types)
+  app.use('/api/product', dropdownRouter);
 
-    // PRODUCTS MODULE
-    app.use('/api/digi/product', productRouter);
-    
+  // LOCATION ROUTES (New unified structure)
+  app.use('/api/location', locationRouter);
+
+  // CUSTOMER ORDER MODULE
+  app.use('/api/order', orderRouter);
+
+  // PRODUCTS MODULE
+  app.use('/api/digi/product', productRouter);
+
+
+  // Repair route
+  app.use("/api/repair", repairRouter);
+
+
+  // vendor route
+  app.use("/api/vendor", vendorRouter);
+
+  // vendor order & return route
+  app.use("/api/vendor-order", vendorOrderRouter);
+
 } catch (error) {
-    console.error("Error occurred:", error);
-    res.status(500).json({
-        message: "Internal Server Error",
-        error: true,
-        success: false,
-        server: "lens-manufacturing-erp",
-        serverError: error.message || error
-    });
+  console.error("Error occurred:", error);
+  res.status(500).json({
+    message: "Internal Server Error",
+    error: true,
+    success: false,
+    server: "lens-manufacturing-erp",
+    serverError: error.message || error
+  });
 }
 
 app.use((err, req, res, next) => {
-    console.error('Unhandled error:', err);
-    const status = err?.status || 500;
-    res.status(status).json({
-        message: err?.message || 'Internal Server Error',
-        error: true,
-        success: false,
-        ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {})
-    });
+  console.error('Unhandled error:', err);
+  const status = err?.status || 500;
+  res.status(status).json({
+    message: err?.message || 'Internal Server Error',
+    error: true,
+    success: false,
+    ...(process.env.NODE_ENV === 'development' ? { stack: err.stack } : {})
+  });
 });
 
 app.listen(process.env.PORT || 8080, () => {
-    console.log(`Server is running http://localhost:${process.env.PORT || 8080}`);
+  console.log(`Server is running http://localhost:${process.env.PORT || 8080}`);
 });
 
 connectDB()
