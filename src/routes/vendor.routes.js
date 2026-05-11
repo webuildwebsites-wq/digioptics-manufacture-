@@ -4,9 +4,10 @@ const router = express.Router();
 import {
     createVendor, getAllVendors, getVendorById, updateVendor, deleteVendor, filterVendors, suggestionVendors
 } from "../core/controllers/vendor.controller.js";
+import { ProtectUser } from "../middlewares/Auth/AdminMiddleware/adminMiddleware.js";
 
 // Create vendor
-router.post("/", createVendor);
+router.post("/", ProtectUser, createVendor);
 
 // GET /api/vendor/suggestion?q=john  → search by name or mobile (max 5)
 router.get("/suggestion", suggestionVendors);
@@ -18,12 +19,13 @@ router.get("/", getAllVendors);
 router.get("/:_id", getVendorById);
 
 // Update vendor
-router.put("/:_id", updateVendor);
+router.put("/:_id", ProtectUser, updateVendor);
 
 // Delete vendor (ADMIN only)
-router.delete("/:_id", deleteVendor);
+router.delete("/:_id",ProtectUser, deleteVendor);
 
 // fiter vendors by date range and keyword
 router.post("/search", filterVendors);
 
 export default router;
+

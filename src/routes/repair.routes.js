@@ -10,6 +10,7 @@ import {
   filterRepairs,
   getRepairs,
 } from "../core/controllers/repair.controller.js";
+import { ProtectUser } from "../middlewares/Auth/AdminMiddleware/adminMiddleware.js";
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ const router = express.Router();
 
 
 // Create repair
-router.post("/", createRepair);
+router.post("/",  ProtectUser, createRepair);
 
 // Get repairs list
 router.post("/search", filterRepairs);
@@ -32,12 +33,12 @@ router.get("/", getRepairs);
 router.get("/:_id", getSingleRepair);
 
 // Update repair
-router.put("/:_id", updateRepair);
+router.put("/:_id", ProtectUser, updateRepair);
 
 // Update repair status
-router.patch("/:_id/status", updateRepairStatus);
+router.patch("/:_id/status", ProtectUser, updateRepairStatus);
 
 // Delete repair
-router.delete("/:_id", deleteRepair);
+router.delete("/:_id",ProtectUser, deleteRepair);
 
 export default router;
