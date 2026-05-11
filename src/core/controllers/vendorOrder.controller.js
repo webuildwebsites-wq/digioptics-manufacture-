@@ -5,8 +5,7 @@ import VendorOrder from "../../models/VendorOrder.model.js";
 import VendorOrderItem from "../../models/VendorOrderItem.model.js";
 import Vendor from "../../models/Vendor.model.js";
 
-import { generateVendorOrderInvoiceHTML, generateVendorReturnInvoiceHTML, } from "../templates/invoiceTemplate.js";
-
+import { generateVendorOrderInvoiceHTML, generateVendorReturnInvoiceHTML } from "../services/templates/invoiceTemplate.js";
 import generatePDF from "../services/pdfService.js";
 // import { uploadToGCSPDF } from "../utils/uploadToGCS.js";
 
