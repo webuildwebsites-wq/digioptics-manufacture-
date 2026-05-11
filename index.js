@@ -42,6 +42,7 @@ const allowedOrigins = [
   "https://digiopticswholesaledibysr.netlify.app"
 ];
 
+
 app.use(cors({
   origin(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -53,6 +54,9 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 }));
+
+app.options('*', cors());
+
 
 app.use(helmet({
   crossOriginResourcePolicy: false,
