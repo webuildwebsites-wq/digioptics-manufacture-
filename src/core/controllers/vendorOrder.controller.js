@@ -139,13 +139,13 @@ export const createVendorOrder = async (req, res) => {
       logoUrl: "",
     };
 
-    const html = generateVendorOrderInvoiceHTML(invoiceData);
-    let pdfBuffer = await generatePDF(html);
-    pdfBuffer = Buffer.from(pdfBuffer);
+    // const html = generateVendorOrderInvoiceHTML(invoiceData);
+    // let pdfBuffer = await generatePDF(html);
+    // pdfBuffer = Buffer.from(pdfBuffer);
 
 
 
-    const fileName = `vendor-order/${order.orderNumber}-${Date.now()}.pdf`;
+    // const fileName = `vendor-order/${order.orderNumber}-${Date.now()}.pdf`;
     // const pdfUrl = await uploadToGCSPDF(pdfBuffer, fileName);
     const pdfUrl = "";  // replace with bucket url ^
 
