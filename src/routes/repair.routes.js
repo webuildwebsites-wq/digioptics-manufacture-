@@ -14,6 +14,7 @@ import { ProtectUser } from "../middlewares/Auth/AdminMiddleware/adminMiddleware
 
 const router = express.Router();
 
+import { digiupload } from "./uploads/multer.js"
 
 
 // Protect all repair routes
@@ -21,7 +22,7 @@ const router = express.Router();
 
 
 // Create repair
-router.post("/",  ProtectUser, createRepair);
+router.post("/",  ProtectUser, digiupload.array("images", 10), createRepair);
 
 // Get repairs list
 router.post("/search", filterRepairs);

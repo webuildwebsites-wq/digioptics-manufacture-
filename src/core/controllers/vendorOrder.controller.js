@@ -7,10 +7,6 @@ import Vendor from "../../models/Vendor.model.js";
 
 import { generateVendorOrderInvoiceHTML, generateVendorReturnInvoiceHTML } from "../services/templates/invoiceTemplate.js";
 import generatePDF from "../services/pdfService.js";
-// import { uploadToGCSPDF } from "../utils/uploadToGCS.js";
-
-// import { sendInvoiceWhatsAppMessage, sendVendorOrderInvoiceWhatsAppMessage, sendVendorOrderReturnInvoiceWhatsAppMessage, } from "../services/whatsapp.js";
-
 
 
 
@@ -25,14 +21,12 @@ export const createVendorOrder = async (req, res) => {
       throw new Error("Vendor and items are required");
     }
 
-    console.log(1);
 
     const vendor = await Vendor.findOne({ _id: vendorId }).session(session);
     if (!vendor) {
       throw new Error("Vendor not found");
     }
 
-    console.log(2);
 
     /* =============================
        Get Order Number
@@ -139,15 +133,15 @@ export const createVendorOrder = async (req, res) => {
       logoUrl: "",
     };
 
-    // const html = generateVendorOrderInvoiceHTML(invoiceData);
-    // let pdfBuffer = await generatePDF(html);
-    // pdfBuffer = Buffer.from(pdfBuffer);
+    const html = generateVendorOrderInvoiceHTML(invoiceData);
+    let pdfBuffer = await generatePDF(html);
+    pdfBuffer = Buffer.from(pdfBuffer);
 
 
 
-    // const fileName = `vendor-order/${order.orderNumber}-${Date.now()}.pdf`;
-    // const pdfUrl = await uploadToGCSPDF(pdfBuffer, fileName);
-    const pdfUrl = "";  // replace with bucket url ^
+    const fileName = `vendor-order/${order.orderNumber}-${Date.now()}.pdf`;
+    const pdfUrl = await uploadToGCSPDF(pdfBuffer, fileName);
+    // const pdfUrl = "";  // replace with bucket url ^
 
 
 
@@ -159,7 +153,6 @@ export const createVendorOrder = async (req, res) => {
       }
     );
 
-    console.log(6);
 
 
     const urlValue = pdfUrl.replace("https://storage.googleapis.com/", "");

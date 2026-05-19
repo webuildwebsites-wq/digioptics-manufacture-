@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 import Repair from "../../models/Repair.model.js";
 
-// import { uploadToGCSRepair } from "../utils/uploadToGCS.js";
+import {  } from "../../Utils/uploads/image.upload.bucket.js";
+import { uploadToGCSRepair } from "../../Utils/uploads/upload.bucket.js";
 
 
 /* =====================================================
